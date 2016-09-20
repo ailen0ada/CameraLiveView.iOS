@@ -16,9 +16,12 @@ namespace CameraLiveView.iOS
         {
             base.ViewWillAppear(animated);
 
+            AuthorizeCameraUse();
+
             InitCaptureSession();
 
             SetupPreviewLayer();
+
 
             session.StartRunning();
         }
@@ -36,9 +39,8 @@ namespace CameraLiveView.iOS
             // var devices = discoverySession.Devices;
 
             var defaultCamera = AVCaptureDevice.GetDefaultDevice(AVCaptureDeviceType.BuiltInWideAngleCamera, AVMediaType.Video, AVCaptureDevicePosition.Front);
-
-            NSError error;
-            var input = new AVCaptureDeviceInput(defaultCamera, out error);
+            ConfigureCameraForDevice(defaultCamera);
+            var input = AVCaptureDeviceInput.FromDevice(defaultCamera);
             session.AddInput(input);
 
             photoOutput = new AVCapturePhotoOutput();
@@ -55,6 +57,38 @@ namespace CameraLiveView.iOS
             previewLayer.VideoGravity = AVLayerVideoGravity.ResizeAspect;
             previewLayer.Frame = LiveView.Bounds;
             LiveView.Layer.AddSublayer(previewLayer);
+        }
+
+        void ConfigureCameraForDevice(AVCaptureDevice device)
+        {
+            var error = new NSError();
+            if (device.IsFocusModeSupported(AVCaptureFocusMode.ContinuousAutoFocus))
+            {
+                device.LockForConfiguration(out error);
+                device.FocusMode = AVCaptureFocusMode.ContinuousAutoFocus;
+                device.UnlockForConfiguration();
+            }
+            else if (device.IsExposureModeSupported(AVCaptureExposureMode.ContinuousAutoExposure))
+            {
+                device.LockForConfiguration(out error);
+                device.ExposureMode = AVCaptureExposureMode.ContinuousAutoExposure;
+                device.UnlockForConfiguration();
+            }
+            else if (device.IsWhiteBalanceModeSupported(AVCaptureWhiteBalanceMode.ContinuousAutoWhiteBalance))
+            {
+                device.LockForConfiguration(out error);
+                device.WhiteBalanceMode = AVCaptureWhiteBalanceMode.ContinuousAutoWhiteBalance;
+                device.UnlockForConfiguration();
+            }
+        }
+
+        void AuthorizeCameraUse()
+        {
+            var authorizationStatus = AVCaptureDevice.GetAuthorizationStatus(AVMediaType.Video);
+            if (authorizationStatus != AVAuthorizationStatus.Authorized)
+            {
+                AVCaptureDevice.RequestAccessForMediaType(AVMediaType.Video, (accessGranted) => System.Diagnostics.Debug.WriteLine(accessGranted));
+            }
         }
     }
 }
