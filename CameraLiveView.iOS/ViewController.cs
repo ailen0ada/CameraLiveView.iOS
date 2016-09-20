@@ -1,5 +1,6 @@
 ﻿using System;
-
+using AVFoundation;
+using Foundation;
 using UIKit;
 
 namespace CameraLiveView.iOS
@@ -11,16 +12,49 @@ namespace CameraLiveView.iOS
             // Note: this .ctor should not contain any initialization logic.
         }
 
-        public override void ViewDidLoad()
+        public override void ViewWillAppear(bool animated)
         {
-            base.ViewDidLoad();
-            // Perform any additional setup after loading the view, typically from a nib.
+            base.ViewWillAppear(animated);
+
+            InitCaptureSession();
+
+            SetupPreviewLayer();
+
+            session.StartRunning();
         }
 
-        public override void DidReceiveMemoryWarning()
+        private AVCaptureSession session;
+
+        void InitCaptureSession()
         {
-            base.DidReceiveMemoryWarning();
-            // Release any cached data, images, etc that aren't in use.
+            session = new AVCaptureSession();
+            session.SessionPreset = AVCaptureSession.PresetHigh;
+
+            // iPhone 7 Plusで全てのデバイスを列挙するなら
+            // var deviceTypes = new[] { AVCaptureDeviceType.BuiltInDuoCamera, AVCaptureDeviceType.BuiltInWideAngleCamera, AVCaptureDeviceType.BuiltInTelephotoCamera};
+            // var discoverySession = AVCaptureDeviceDiscoverySession.Create(deviceTypes, AVMediaType.Video, AVCaptureDevicePosition.Unspecified);
+            // var devices = discoverySession.Devices;
+
+            var defaultCamera = AVCaptureDevice.GetDefaultDevice(AVCaptureDeviceType.BuiltInWideAngleCamera, AVMediaType.Video, AVCaptureDevicePosition.Front);
+
+            NSError error;
+            var input = new AVCaptureDeviceInput(defaultCamera, out error);
+            session.AddInput(input);
+
+            photoOutput = new AVCapturePhotoOutput();
+            session.AddOutput(photoOutput);
+        }
+
+        private AVCaptureVideoPreviewLayer previewLayer;
+
+        private AVCapturePhotoOutput photoOutput;
+
+        void SetupPreviewLayer()
+        {
+            previewLayer = new AVCaptureVideoPreviewLayer(session);
+            previewLayer.VideoGravity = AVLayerVideoGravity.ResizeAspect;
+            previewLayer.Frame = LiveView.Bounds;
+            LiveView.Layer.AddSublayer(previewLayer);
         }
     }
 }
