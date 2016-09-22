@@ -22,7 +22,6 @@ namespace CameraLiveView.iOS
 
             SetupPreviewLayer();
 
-
             session.StartRunning();
         }
 
@@ -88,6 +87,29 @@ namespace CameraLiveView.iOS
             if (authorizationStatus != AVAuthorizationStatus.Authorized)
             {
                 AVCaptureDevice.RequestAccessForMediaType(AVMediaType.Video, (accessGranted) => System.Diagnostics.Debug.WriteLine(accessGranted));
+            }
+        }
+
+        public override void ViewDidLayoutSubviews()
+        {
+            base.ViewDidLayoutSubviews();
+            var orientation = UIApplication.SharedApplication.StatusBarOrientation;
+            switch (orientation)
+            {
+                case UIInterfaceOrientation.Portrait:
+                    previewLayer.Connection.VideoOrientation = AVCaptureVideoOrientation.Portrait;
+                    break;
+                case UIInterfaceOrientation.PortraitUpsideDown:
+                    previewLayer.Connection.VideoOrientation = AVCaptureVideoOrientation.PortraitUpsideDown;
+                    break;
+                case UIInterfaceOrientation.LandscapeLeft:
+                    previewLayer.Connection.VideoOrientation = AVCaptureVideoOrientation.LandscapeLeft;
+                    break;
+                case UIInterfaceOrientation.LandscapeRight:
+                    previewLayer.Connection.VideoOrientation = AVCaptureVideoOrientation.LandscapeRight;
+                    break;
+                default:
+                    throw new IndexOutOfRangeException();
             }
         }
     }

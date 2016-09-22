@@ -13,7 +13,7 @@ namespace CameraLiveView.iOS
 	partial class ViewController
 	{
 		[Outlet]
-		UIKit.UIView LiveView { get; set; }
+		CameraLiveView.iOS.LiveView LiveView { get; set; }
 		
 		void ReleaseDesignerOutlets ()
 		{
